@@ -19,8 +19,11 @@ async def zmq_listener_task(websocket):
     socket.setsockopt_string(zmq.SUBSCRIBE, 'hashtx')
 
     async for msg in zmq_listener(socket):
-        print(f"Sending WebSocket message: {msg}")
-        await websocket.send(str(msg))
+        # msg is a list of bytes
+        # convert to string
+        msg_str = msg.decode('utf-8')
+        print(f"Sending WebSocket message: {msg_str}")
+        await websocket.send(msg_str)
 
 async def ws_handler(websocket, path):
     listener_task = asyncio.create_task(zmq_listener_task(websocket))
