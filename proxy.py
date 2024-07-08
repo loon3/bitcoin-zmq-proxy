@@ -15,7 +15,7 @@ async def zmq_listener(socket):
         print(f"Received ZMQ message: {msg}")
         yield msg
 
-async def zmq_listener_task(websocket):
+async def zmq_listener_task(websocket, filters):
     context = zmq.asyncio.Context()
     socket = context.socket(zmq.SUB)
     socket.setsockopt(zmq.RCVHWM, 0)
@@ -30,14 +30,21 @@ async def zmq_listener_task(websocket):
             # Assuming the second element is the JSON string
             json_str = msg[1].decode('utf-8')
             json_obj = json.loads(json_str)
-            print(f"Sending WebSocket message: {json_obj}")
-            await websocket.send(json.dumps(json_obj))
+
+            # Filter based on the provided filters
+            if not filters or all(json_obj.get(key) == value for key, value in filters.items()):
+                print(f"Sending WebSocket message: {json_obj}")
+                await websocket.send(json.dumps(json_obj))
         except (IndexError, UnicodeDecodeError, json.JSONDecodeError) as e:
             print(f"Error processing message: {e}")
             await websocket.send(str(msg))
 
 async def ws_handler(websocket, path):
-    listener_task = asyncio.create_task(zmq_listener_task(websocket))
+    # Parse query parameters for filters
+    query = path.split('?')[-1]
+    filters = dict(param.split('=') for param in query.split('&') if '=' in param)
+
+    listener_task = asyncio.create_task(zmq_listener_task(websocket, filters))
     # ping_task = asyncio.create_task(ping(websocket))
     
     done, pending = await asyncio.wait(
