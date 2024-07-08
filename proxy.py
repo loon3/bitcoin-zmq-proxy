@@ -18,9 +18,15 @@ async def zmq_listener():
         yield msg
 
 async def ws_handler(websocket, path):
+    listener_task = asyncio.create_task(zmq_listener())
+    ping_task = asyncio.create_task(ping(websocket))
+
     async for msg in zmq_listener():
         print(f"Sending WebSocket message: {msg}")  # Add this line
         await websocket.send(str(msg))
+
+    await listener_task
+    await ping_task
 
 async def ping(websocket):
     while True:
