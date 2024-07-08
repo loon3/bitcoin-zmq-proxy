@@ -3,10 +3,9 @@ import websockets
 import zmq
 import zmq.asyncio
 import json
-from bitcoin.core import lx, b2lx
-from bitcoin.core import CBlock
+from bitcoin.core import CBlock, b2lx
 
-BITCOIN_ZMQ_ADDRESS = "tcp://bitcoind:9333"  # Use the container name as the address
+BITCOIN_ZMQ_ADDRESS = "tcp://counterparty-core-bitcoind-1:9333"  # Use the container name as the address
 WEBSOCKET_PORT = 8765
 
 async def zmq_listener():
@@ -22,9 +21,11 @@ async def zmq_listener():
 
 def get_block_info(raw_block):
     block = CBlock.deserialize(raw_block)
+    tx_hashes = [b2lx(tx.GetHash()) for tx in block.vtx]
     block_info = {
         'height': block.nHeight,
-        'time': block.nTime
+        'time': block.nTime,
+        'tx_hashes': tx_hashes
     }
     return block_info
 
