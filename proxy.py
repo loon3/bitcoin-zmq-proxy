@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import zmq
 import zmq.asyncio
+import binascii
 
 BITCOIN_ZMQ_ADDRESS = "tcp://counterparty-core-bitcoind-1:9332"  # Change this to your Bitcoin ZMQ address
 WEBSOCKET_PORT = 8765
@@ -20,7 +21,9 @@ async def zmq_listener_task(websocket):
 
     async for msg in zmq_listener(socket):
         print(f"Sending WebSocket message: {msg}")
-        await websocket.send(str(msg))
+        txid_bytes = msg[1]
+        txid_hex = binascii.hexlify(txid_bytes).decode('utf-8')
+        await websocket.send(txid_hex)
 
 async def ws_handler(websocket, path):
     listener_task = asyncio.create_task(zmq_listener_task(websocket))
