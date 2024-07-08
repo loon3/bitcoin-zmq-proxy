@@ -3,9 +3,8 @@ import websockets
 import zmq
 import zmq.asyncio
 import json
+from bitcoin.core import lx, b2lx
 from bitcoin.core import CBlock
-from bitcoin.core.serialize import deserialize
-from bitcoin.core import lx
 
 BITCOIN_ZMQ_ADDRESS = "tcp://bitcoind:9333"  # Use the container name as the address
 WEBSOCKET_PORT = 8765
