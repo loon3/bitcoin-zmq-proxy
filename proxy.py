@@ -12,10 +12,9 @@ WEBSOCKET_PORT = 8765
 async def zmq_listener(socket):
     while True:
         msg = await socket.recv_multipart()
-        print(f"Received ZMQ message: {msg}")
         yield msg
 
-async def zmq_listener_task(websocket):
+async def zmq_listener_task(websocket, filters):
     context = zmq.asyncio.Context()
     socket = context.socket(zmq.SUB)
     socket.setsockopt(zmq.RCVHWM, 0)
@@ -25,34 +24,37 @@ async def zmq_listener_task(websocket):
     socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
     async for msg in zmq_listener(socket):
-        print(f"Received ZMQ message: {msg}")
         try:
             # Assuming the second element is the JSON string
             json_str = msg[1].decode('utf-8')
             json_obj = json.loads(json_str)
-            print(f"Sending WebSocket message: {json_obj}")
-            await websocket.send(json.dumps(json_obj))
+
+            # Filter the message based on the filters received from the WebSocket client
+            if "event" in json_obj and json_obj["event"] in filters:
+                await websocket.send(json.dumps(json_obj))
         except (IndexError, UnicodeDecodeError, json.JSONDecodeError) as e:
             print(f"Error processing message: {e}")
             await websocket.send(str(msg))
 
 async def ws_handler(websocket, path):
-    listener_task = asyncio.create_task(zmq_listener_task(websocket))
-    # ping_task = asyncio.create_task(ping(websocket))
-    
-    done, pending = await asyncio.wait(
-        [listener_task], # add ping_task here for testing
-        return_when=asyncio.FIRST_COMPLETED,
-    )
-    
-    for task in pending:
-        task.cancel()
+    try:
+        # Receive the initial message containing the filters
+        initial_message = await websocket.recv()
+        message_data = json.loads(initial_message)
+        filters = message_data.get("filters", [])
+        print(f"Received filters: {filters}")
 
-async def ping(websocket):
-    while True:
-        await asyncio.sleep(60)
-        print("Sending ping")
-        await websocket.send("ping")
+        listener_task = asyncio.create_task(zmq_listener_task(websocket, filters))
+        
+        done, pending = await asyncio.wait(
+            [listener_task], 
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        for task in pending:
+            task.cancel()
+    except websockets.exceptions.ConnectionClosed as e:
+        print(f"Connection closed: {e}")
 
 async def main():
     async with websockets.serve(ws_handler, "0.0.0.0", WEBSOCKET_PORT):
