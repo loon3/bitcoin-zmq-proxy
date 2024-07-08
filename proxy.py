@@ -17,18 +17,10 @@ async def zmq_listener_task(websocket):
     socket = context.socket(zmq.SUB)
     socket.connect(BITCOIN_ZMQ_ADDRESS)
     socket.setsockopt_string(zmq.SUBSCRIBE, 'hashtx')
-    
+
     async for msg in zmq_listener(socket):
-        # msg is a list of bytes
-        # attempt to decode each byte element to string, handle errors
-        msg_str = []
-        for m in msg:
-            try:
-                msg_str.append(m.decode('utf-8'))
-            except UnicodeDecodeError:
-                msg_str.append(str(m))  # Fallback to raw byte string representation
-        print(f"Sending WebSocket message: {msg_str}")
-        await websocket.send(str(msg_str))
+        print(f"Sending WebSocket message: {msg}")
+        await websocket.send(str(msg))
 
 async def ws_handler(websocket, path):
     listener_task = asyncio.create_task(zmq_listener_task(websocket))
