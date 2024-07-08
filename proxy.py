@@ -17,6 +17,11 @@ async def zmq_listener():
         print(f"Received ZMQ message: {msg}")
         yield msg
 
+async def zmq_listener_task(websocket):
+    async for msg in zmq_listener():
+        print(f"Sending WebSocket message: {msg}")
+        await websocket.send(str(msg))
+
 async def ws_handler(websocket, path):
     listener_task = asyncio.create_task(zmq_listener_task(websocket))
     ping_task = asyncio.create_task(ping(websocket))
@@ -28,11 +33,6 @@ async def ws_handler(websocket, path):
     
     for task in pending:
         task.cancel()
-
-async def zmq_listener_task(websocket):
-    async for msg in zmq_listener():
-        print(f"Sending WebSocket message: {msg}")
-        await websocket.send(str(msg))
 
 async def ping(websocket):
     while True:
