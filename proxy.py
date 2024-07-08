@@ -24,10 +24,10 @@ async def zmq_listener_task(websocket):
 
 async def ws_handler(websocket, path):
     listener_task = asyncio.create_task(zmq_listener_task(websocket))
-    ping_task = asyncio.create_task(ping(websocket))
+    # ping_task = asyncio.create_task(ping(websocket))
     
     done, pending = await asyncio.wait(
-        [listener_task, ping_task],
+        [listener_task], # add ping_task here for testing
         return_when=asyncio.FIRST_COMPLETED,
     )
     
