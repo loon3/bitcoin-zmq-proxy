@@ -10,8 +10,6 @@ This project sets up a WebSocket server that listens to ZMQ messages from Bitcoi
 
 ## Setup
 
-### Steps
-
 These steps assume you have a running counterparty-core and bitcoind node using docker on the same machine.
 
 1. **Clone the repository:**
