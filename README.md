@@ -33,7 +33,7 @@ These steps assume you have a running counterparty-core and bitcoind node using 
 
 4. **Add counterparty-core and bitcoind containers to the network:**
 
-    (Note: may need to run docker ps to get the container names)
+    (Note: may need to run `docker ps` to get the container names)
 
     ```sh
     docker network connect zmq-websocket-proxy counterparty-core-counterparty-core-1 
