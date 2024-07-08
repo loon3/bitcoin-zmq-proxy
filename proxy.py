@@ -7,7 +7,7 @@ import json
 
 BITCOIN_ZMQ_ADDRESS = "tcp://counterparty-core-bitcoind-1:9333"  # Change this to your Bitcoin ZMQ address
 COUNTERPARTY_ZMQ_ADDRESS = "tcp://counterparty-core-counterparty-core-1:4001"  # Change this to your Counterparty ZMQ address
-WEBSOCKET_PORT = 8775
+WEBSOCKET_PORT = 8765
 
 async def zmq_listener(socket):
     while True:
