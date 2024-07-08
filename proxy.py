@@ -14,10 +14,12 @@ async def zmq_listener():
 
     while True:
         msg = await socket.recv_multipart()
+        print(f"Received ZMQ message: {msg}")  # Add this line
         yield msg
 
 async def ws_handler(websocket, path):
     async for msg in zmq_listener():
+        print(f"Sending WebSocket message: {msg}")  # Add this line
         await websocket.send(str(msg))
 
 async def main():
