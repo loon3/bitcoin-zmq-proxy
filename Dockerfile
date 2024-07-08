@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed packages
-RUN pip install --no-cache-dir websockets pyzmq python-bitcoinlib
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Make port 8765 available to the world outside this container
 EXPOSE 8765
