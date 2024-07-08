@@ -3,7 +3,7 @@ import websockets
 import zmq
 import zmq.asyncio
 
-BITCOIN_ZMQ_ADDRESS = "tcp://bitcoind:9332"  # Change this to your Bitcoin ZMQ address
+BITCOIN_ZMQ_ADDRESS = "tcp://counterparty-core-bitcoind-1:9332"  # Change this to your Bitcoin ZMQ address
 WEBSOCKET_PORT = 8765
 
 async def zmq_listener(socket):
