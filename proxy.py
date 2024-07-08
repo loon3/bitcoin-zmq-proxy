@@ -20,10 +20,10 @@ async def zmq_listener_task(websocket):
 
     async for msg in zmq_listener(socket):
         # msg is a list of bytes
-        # convert to string
-        msg_str = msg.decode('utf-8')
+        # convert each byte element to string
+        msg_str = [m.decode('utf-8') for m in msg]
         print(f"Sending WebSocket message: {msg_str}")
-        await websocket.send(msg_str)
+        await websocket.send(str(msg_str))
 
 async def ws_handler(websocket, path):
     listener_task = asyncio.create_task(zmq_listener_task(websocket))
