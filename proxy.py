@@ -17,10 +17,11 @@ async def zmq_listener(socket):
 async def zmq_listener_task(websocket):
     context = zmq.asyncio.Context()
     socket = context.socket(zmq.SUB)
+    socket.setsockopt(zmq.RCVHWM, 0)
     socket.connect(BITCOIN_ZMQ_ADDRESS)
     socket.setsockopt_string(zmq.SUBSCRIBE, 'rawblock')
     socket.connect(COUNTERPARTY_ZMQ_ADDRESS)
-    socket.setsockopt_string(zmq.SUBSCRIBE, 'NEW_BLOCK')
+    socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
     async for msg in zmq_listener(socket):
         print(f"Sending WebSocket message: {msg}")
