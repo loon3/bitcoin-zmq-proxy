@@ -6,19 +6,19 @@ import zmq.asyncio
 BITCOIN_ZMQ_ADDRESS = "tcp://0.0.0.0:9333"  # Change this to your Bitcoin ZMQ address
 WEBSOCKET_PORT = 8765
 
-async def zmq_listener():
-    context = zmq.asyncio.Context()
-    socket = context.socket(zmq.SUB)
-    socket.connect(BITCOIN_ZMQ_ADDRESS)
-    socket.setsockopt_string(zmq.SUBSCRIBE, '')
-
+async def zmq_listener(socket):
     while True:
         msg = await socket.recv_multipart()
         print(f"Received ZMQ message: {msg}")
         yield msg
 
 async def zmq_listener_task(websocket):
-    async for msg in zmq_listener():
+    context = zmq.asyncio.Context()
+    socket = context.socket(zmq.SUB)
+    socket.connect(BITCOIN_ZMQ_ADDRESS)
+    socket.setsockopt_string(zmq.SUBSCRIBE, '')
+
+    async for msg in zmq_listener(socket):
         print(f"Sending WebSocket message: {msg}")
         await websocket.send(str(msg))
 
