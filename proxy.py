@@ -5,8 +5,8 @@ import zmq.asyncio
 import binascii
 import json
 
-BITCOIN_ZMQ_ADDRESS = "tcp://counterparty-core-bitcoind-1:9333"  # Change this to your Bitcoin ZMQ address
-COUNTERPARTY_ZMQ_ADDRESS = "tcp://counterparty-core-counterparty-core-1:4001"  # Change this to your Counterparty ZMQ address
+BITCOIN_ZMQ_ADDRESS = "tcp://counterparty-core-bitcoind-1:9333"
+COUNTERPARTY_ZMQ_ADDRESS = "tcp://counterparty-core-counterparty-core-1:4001"
 WEBSOCKET_PORT = 8765
 
 async def zmq_listener(socket):
@@ -25,9 +25,7 @@ async def zmq_listener_task(websocket):
     socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
     async for msg in zmq_listener(socket):
-        print(f"Received ZMQ message: {msg}")
         try:
-            # Assuming the second element is the JSON string
             json_str = msg[1].decode('utf-8')
             json_obj = json.loads(json_str)
             print(f"Sending WebSocket message: {json_obj}")
@@ -35,18 +33,23 @@ async def zmq_listener_task(websocket):
         except (IndexError, UnicodeDecodeError, json.JSONDecodeError) as e:
             print(f"Error processing message: {e}")
             await websocket.send(str(msg))
+        except websockets.exceptions.ConnectionClosedError as e:
+            print(f"WebSocket connection closed: {e}")
+            break
 
 async def ws_handler(websocket, path):
-    listener_task = asyncio.create_task(zmq_listener_task(websocket))
-    # ping_task = asyncio.create_task(ping(websocket))
-    
-    done, pending = await asyncio.wait(
-        [listener_task], # add ping_task here for testing
-        return_when=asyncio.FIRST_COMPLETED,
-    )
-    
-    for task in pending:
-        task.cancel()
+    while True:
+        try:
+            listener_task = asyncio.create_task(zmq_listener_task(websocket))
+            done, pending = await asyncio.wait(
+                [listener_task],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+        except websockets.exceptions.ConnectionClosedError as e:
+            print(f"WebSocket connection closed, retrying: {e}")
+            await asyncio.sleep(1)  # Wait a bit before retrying
 
 async def ping(websocket):
     while True:
