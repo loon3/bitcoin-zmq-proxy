@@ -34,7 +34,10 @@ async def zmq_listener_task(websocket):
             print(f"Error processing message: {e}")
             await websocket.send(str(msg))
         except websockets.exceptions.ConnectionClosedError as e:
-            print(f"WebSocket connection closed: {e}")
+            print(f"WebSocket connection closed with error: {e}")
+            break
+        except websockets.exceptions.ConnectionClosedOK as e:
+            print(f"WebSocket connection closed normally: {e}")
             break
 
 async def ws_handler(websocket, path):
@@ -49,6 +52,9 @@ async def ws_handler(websocket, path):
                 task.cancel()
         except websockets.exceptions.ConnectionClosedError as e:
             print(f"WebSocket connection closed, retrying: {e}")
+            await asyncio.sleep(1)  # Wait a bit before retrying
+        except websockets.exceptions.ConnectionClosedOK as e:
+            print(f"WebSocket connection closed normally, retrying: {e}")
             await asyncio.sleep(1)  # Wait a bit before retrying
 
 async def ping(websocket):
